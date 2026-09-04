@@ -27,61 +27,69 @@ To implement MESSAGE AUTHENTICATION CODE(MAC)
 ## Program:
 ```
 
-#include <stdio.h>
+ #include <stdio.h>
 #include <string.h>
 
-// Function to compute a simple hash using XOR and addition
-void computeSimpleHash(const char *message, unsigned char *hash) {
-    unsigned char temp = 0;
+#define MAC_SIZE 32 // Define MAC size in bytes
 
-    // Simple hash computation: XOR and addition
-    for (int i = 0; message[i] != '\0'; i++) {
-        temp = temp ^ message[i];  // XOR each character
-        temp += message[i];        // Add each character's value
-    }
+// Function to compute a simple MAC using XOR
+void computeMAC(const char *key, const char *message, char *mac) {
+    int key_len = strlen(key);
+    int msg_len = strlen(message);
     
-    // Store the result in the hash
-    *hash = temp;
+    // XOR the key and message, repeating if necessary
+    for (int i = 0; i < MAC_SIZE; i++) {
+        mac[i] = key[i % key_len] ^ message[i % msg_len]; // Simple XOR operation
+    }
+    mac[MAC_SIZE] = '\0'; // Null-terminate the MAC string
 }
 
 int main() {
-    char message[256];      // Buffer for the input message
-    unsigned char hash;     // Buffer for the hash (only 1 byte for simplicity)
-    char receivedHash[3];   // Buffer for input of received hash (in hex format)
+    char key[100], message[100];
+    char mac[MAC_SIZE + 1]; // Buffer for MAC (+1 for null terminator)
+    char receivedMAC[MAC_SIZE + 1]; // Buffer for input of received MAC
 
-    // Step 1: Input the message
+    // Step 1: Input secret key
+    printf("Enter the secret key: ");
+    scanf("%s", key);
+
+    // Step 2: Input the message
     printf("Enter the message: ");
     scanf("%s", message);
 
-    // Step 2: Compute the simple hash
-    computeSimpleHash(message, &hash);
+    // Step 3: Compute the MAC
+    computeMAC(key, message, mac);
 
-    // Step 3: Display the computed hash in hexadecimal format
-    printf("Computed Hash (in hex): %02x\n", hash);
+    // Step 4: Display the computed MAC in hexadecimal
+    printf("Computed MAC (in hex): ");
+    for (int i = 0; i < MAC_SIZE; i++) {
+        printf("%02x", (unsigned char)mac[i]); // Print each byte as hex
+    }
+    printf("\n");
 
-    // Optional Step 5: Verify the hash
-    printf("Enter the received hash (in hex): ");
-    scanf("%s", receivedHash);
+    // Step 5: Input the received MAC (for verification)
+    printf("Enter the received MAC (as hex): ");
+    for (int i = 0; i < MAC_SIZE; i++) {
+        scanf("%02hhx", &receivedMAC[i]);
+    }
 
-    // Convert received hash from hex string to an unsigned char
-    unsigned int receivedHashValue;
-    sscanf(receivedHash, "%02x", &receivedHashValue);
-
-    // Compare the computed hash with the received hash
-    if (hash == receivedHashValue) {
-        printf("Hash verification successful. Message is unchanged.\n");
+    // Compare the computed MAC with the received MAC
+    if (memcmp(mac, receivedMAC, MAC_SIZE) == 0) {
+        printf("MAC verification successful. Message is authentic.\n");
     } else {
-        printf("Hash verification failed. Message has been altered.\n");
+        printf("MAC verification failed. Message is not authentic.\n");
     }
 
     return 0;
 }
+
+
 ```
 
 
 ## Output:
 
-<img width="628" height="236" alt="image" src="https://github.com/user-attachments/assets/a4df3a5e-d8aa-43f3-9265-f501e1ac68cc" />
+<img width="1231" height="580" alt="image" src="https://github.com/user-attachments/assets/068644a8-df45-46fe-8dec-3ed797d1763c" />
 
 
 ## Result:
